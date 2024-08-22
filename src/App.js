@@ -1,31 +1,44 @@
-import Register from "./components/Register";
-import ipConfig from "./ipConfig.json";
-import { Route, Switch } from "react-router-dom";
-import Login from "./components/Login";
-import Products from "./components/Products";
-import Checkout from "./components/Checkout";
-import Thanks from "./components/Thanks";
+const express = require("express");
+const compression = require("compression");
+const cors = require("cors");
+const httpStatus = require("http-status");
+const routes = require("./routes/v1");
+const { errorHandler } = require("./middlewares/error");
+const ApiError = require("./utils/ApiError");
+const { jwtStrategy } = require("./config/passport");
+const helmet = require("helmet");
+const passport = require("passport");
 
-export const config = {
-  endpoint: `http://${ipConfig.workspaceIp}:8082/api/v1`,
-};
+const app = express();
 
-function App() {
-  return (
-    <div className="App">
-      {/* TODO: CRIO_TASK_MODULE_LOGIN - To add configure routes and their mapping */}
-          {/*
-           */}
-           <Switch>
-            <Route exact path="/"><Products/></Route>
-            <Route  path="/register"> <Register /></Route>
-            <Route  path="/login"> <Login /></Route>
-            <Route  path="/checkout"> <Checkout/></Route>
-            <Route  path="/thanks"> <Thanks/></Route>
-           </Switch>
-           
-    </div>
-  );
-}
+// set security HTTP headers - https://helmetjs.github.io/
+app.use(helmet());
 
-export default App;
+// parse json request body
+app.use(express.json());
+
+// parse urlencoded request body
+app.use(express.urlencoded({ extended: true }));
+
+// gzip compression
+app.use(compression());
+
+// enable cors
+app.use(cors());
+app.options("*", cors());
+
+// TODO: CRIO_TASK_MODULE_AUTH - Initialize passport and add "jwt" authentication strategy
+app.use(passport.initialize());
+passport.use('jwt',jwtStrategy)
+// Reroute all API request starting with "/v1" route
+app.use("/v1", routes);
+
+// send back a 404 error for any unknown api request
+app.use((req, res, next) => {
+    next(new ApiError(httpStatus.NOT_FOUND, "Not found"));
+});
+
+// handle error
+app.use(errorHandler);
+
+module.exports = app;
