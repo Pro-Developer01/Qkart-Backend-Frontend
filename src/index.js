@@ -1,32 +1,24 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import "./index.css";
-import App from "./App";
-import { SnackbarProvider } from "notistack";
-import { BrowserRouter } from "react-router-dom";
-import { ThemeProvider } from "@mui/system";
-import theme from "./theme";
-// TODO: CRIO_TASK_MODULE_REGISTER - Add Target container ID (refer public/index.html)
-if (module.hot) {
-  module.hot.accept();
-}
+const mongoose = require("mongoose");
+const app = require("./app");
+const config = require("./config/config");
 
-ReactDOM.render(
-  <React.StrictMode>
-    <BrowserRouter>
-    <ThemeProvider theme={theme}>
-      <SnackbarProvider
-        maxSnack={1}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "center",
-        }}
-        preventDuplicate
-      >
-        <App />
-      </SnackbarProvider>
-    </ThemeProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
-  document.getElementById("root")
-);
+let server;
+
+// TODO: CRIO_TASK_MODULE_UNDERSTANDING_BASICS - Create Mongo connection and get the express app to listen on config.port
+// mongoose
+//   .connect("mongodb://127.0.0.1:27017/qkart")
+//   .then((res) => {})
+//   .catch((err) => console.log("err", err));
+// app.listen(8082, () => console.log("listenning"));
+
+const port = config.port;
+
+mongoose 
+.connect(config.mongoose.url, config.mongoose.options)
+.then(() => {
+    console.log("Connected to database")
+    server = app.listen(port, () => {
+        console.log(`Server listening on port ${port}`);
+    })
+})
+.catch((err) => console.log(err));
